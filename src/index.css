@@ -1,0 +1,285 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Futuristic Palette */
+  --bg-space: #0f172a;
+  /* Deep space blue */
+  --bg-panel: rgba(30, 41, 59, 0.7);
+  /* Glass panel */
+
+  --primary: #38bdf8;
+  /* Cyan glow */
+  --primary-glow: 0 0 20px rgba(56, 189, 248, 0.5);
+  --accent: #f59e0b;
+  /* Amber/Gold for LIC identity but neon */
+
+  --text-main: #f1f5f9;
+  /* White-ish */
+  --text-muted: #94a3b8;
+  /* Blue-gray */
+
+  --border: rgba(148, 163, 184, 0.1);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+
+  --radius: 16px;
+  --backdrop: blur(12px);
+
+  --font-main: 'Outfit', sans-serif;
+  /* Modern, geometric */
+}
+
+/* Light Mode Overrides */
+[data-theme="light"] {
+  --bg-space: #f8fafc;
+  --bg-panel: rgba(255, 255, 255, 0.9);
+
+  --primary: #0284c7;
+  --primary-glow: 0 0 10px rgba(2, 132, 199, 0.2);
+  --accent: #d97706;
+
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+
+  --border: rgba(226, 232, 240, 1);
+  --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+  --backdrop: none;
+  /* Disable heavy blur for cleaner light mode */
+}
+
+/* Update Body Background for Light Mode */
+[data-theme="light"] body {
+  background-image: none;
+  background-color: var(--bg-space);
+}
+
+[data-theme="light"] .form-control {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+[data-theme="light"] .form-control:focus {
+  background: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
+}
+
+[data-theme="light"] .sidebar {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-space);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+}
+
+/* Utilities */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.full-height {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glassmorphism Card */
+.card {
+  background: var(--bg-panel);
+  backdrop-filter: var(--backdrop);
+  -webkit-backdrop-filter: var(--backdrop);
+  border: var(--glass-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Buttons - Glowing */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: white;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--primary);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.btn-outline:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--primary);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+/* Global Text Enhancements */
+::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="light"] ::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* Ensure Select Options are visible in both modes */
+select option {
+  background-color: var(--bg-space);
+  color: var(--text-main);
+}
+
+[data-theme="light"] select option {
+  background-color: #fff;
+  color: #333;
+}
+
+/* Specific text color hardening */
+.form-label {
+  color: var(--text-main);
+  /* Brighter label in dark mode */
+  opacity: 0.9;
+}
+
+[data-theme="light"] .form-label {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Fix table text colors */
+th {
+  color: var(--text-muted);
+}
+
+td {
+  color: var(--text-main);
+}
+
+tr td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+tr td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Responsive Helper */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  .full-height {
+    flex-direction: column;
+  }
+}
