@@ -46,7 +46,7 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
                 const submitted = await getPolicies('SUBMITTED');
                 setSubmittedPolicies(submitted);
             } else if (view === 'drafts') {
-                const drafts = await getPolicies('DRAFTS');
+                const drafts = await getPolicies('DRAFT');
                 setDraftPolicies(drafts);
             }
         } catch (error) {
@@ -139,7 +139,7 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
                                 isDraft={false}
                                 onAction={(p) => {
                                     setEditingPolicy(p);
-                                    setStartStep(9);
+                                    setStartStep(10);
                                     setIsReadOnly(true);
                                     setView('form');
                                 }}

@@ -276,10 +276,143 @@ tr td:last-child {
   }
 
   .container {
-    padding: 0 1rem;
+    padding: 0 0.75rem;
   }
 
   .full-height {
     flex-direction: column;
+  }
+
+  /* Sidebar mobile adjustments */
+  .sidebar {
+    width: 100% !important;
+    height: auto !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 0.75rem !important;
+    border-right: none !important;
+    border-top: 1px solid var(--border) !important;
+    flex-direction: row !important;
+    z-index: 1000 !important;
+    overflow-x: auto !important;
+  }
+
+  .sidebar>div:first-child {
+    display: none !important;
+    /* Hide logo on mobile */
+  }
+
+  .sidebar nav {
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: space-around !important;
+    gap: 0.25rem !important;
+  }
+
+  .sidebar nav button {
+    flex-direction: column !important;
+    padding: 0.5rem 0.25rem !important;
+    gap: 0.25rem !important;
+    min-width: 60px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .sidebar nav button span {
+    font-size: 0.7rem !important;
+  }
+
+  .sidebar>div:last-child {
+    display: none !important;
+    /* Hide version on mobile */
+  }
+
+  /* Card adjustments */
+  .card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+  }
+
+  /* Form adjustments */
+  .form-control {
+    padding: 0.75rem;
+    font-size: 16px;
+    /* Prevent zoom on iOS */
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  /* Button adjustments */
+  .btn {
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Grid layouts to single column */
+  [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table responsiveness */
+  table {
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem !important;
+  }
+
+  /* Adjust main content for bottom nav */
+  body {
+    padding-bottom: 80px;
+  }
+
+  /* Dashboard stats */
+  [style*="display: flex"][style*="gap: 1rem"] {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Stepper adjustments */
+  [style*="overflowX: auto"] {
+    gap: 0.25rem !important;
+  }
+
+  /* Modal/Preview adjustments */
+  [style*="position: fixed"][style*="inset: 0"]>div {
+    width: 95% !important;
+    height: 95% !important;
+  }
+
+  /* Hide Edit buttons in summary sections on mobile for cleaner view */
+  .hide-edit-mobile {
+    display: none !important;
+  }
+
+  /* Adjust text sizes */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  h4 {
+    font-size: 1rem;
+  }
+
+  /* Make file upload areas stack vertically */
+  [style*="gridTemplateColumns: '1fr 1fr'"][style*="Upload"] {
+    grid-template-columns: 1fr !important;
   }
 }
