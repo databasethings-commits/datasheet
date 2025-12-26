@@ -1,7 +1,26 @@
-import React from 'react';
-import { Home, Database, FileText, User, Settings, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, Database, FileText, User, Settings, Shield, Download } from 'lucide-react';
 
 export default function Sidebar({ view, onChangeView, stats, isCollapsed, userRole }) {
+    const [installPrompt, setInstallPrompt] = useState(null);
+
+    useEffect(() => {
+        const handler = (e) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setInstallPrompt(null);
+        }
+    };
     const menuItems = [
         { id: 'home', label: 'Home', icon: Home, count: null },
         { id: 'data', label: 'Data', icon: Database, count: stats.submitted },
@@ -137,9 +156,54 @@ export default function Sidebar({ view, onChangeView, stats, isCollapsed, userRo
                 textAlign: isCollapsed ? 'center' : 'left'
             }}>
                 {!isCollapsed ? (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>v2.1 • Enterprise</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>v2.1 • Enterprise</p>
+                        {installPrompt && (
+                            <button
+                                onClick={handleInstallClick}
+                                style={{
+                                    background: 'var(--primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '0.5rem',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    marginTop: '0.5rem'
+                                }}
+                            >
+                                <Download size={14} /> Install App
+                            </button>
+                        )}
+                    </div>
                 ) : (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>v2.1</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>v2.1</p>
+                        {installPrompt && (
+                            <button
+                                onClick={handleInstallClick}
+                                title="Install App"
+                                style={{
+                                    background: 'var(--primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '30px',
+                                    height: '30px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Download size={14} />
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

@@ -192,7 +192,8 @@ export default function CustomerForm({ onCancel, onSuccess, initialData, initial
 
             onSuccess();
         } catch (err) {
-            alert('Failed to submit application.');
+            console.error("Submit Error:", err);
+            alert(`Failed to submit application: ${err.message || 'Unknown error'}`);
         } finally {
             setIsSaving(false);
         }
@@ -518,7 +519,7 @@ export default function CustomerForm({ onCancel, onSuccess, initialData, initial
                         {readOnly ? (
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <button type="button" className="btn btn-secondary" onClick={onCancel} style={{ padding: '0.75rem 2rem', background: 'var(--bg-space)', border: '1px solid var(--border)' }}>Close View</button>
-                                <button type="button" className="btn btn-primary" onClick={onEdit} style={{ padding: '0.75rem 2rem' }}><Edit2 size={16} style={{ marginRight: '8px' }} /> Edit Application</button>
+                                {onEdit && <button type="button" className="btn btn-primary" onClick={onEdit} style={{ padding: '0.75rem 2rem' }}><Edit2 size={16} style={{ marginRight: '8px' }} /> Edit Application</button>}
                             </div>
                         ) : (
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>

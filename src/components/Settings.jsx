@@ -43,7 +43,7 @@ export default function Settings({ theme, toggleTheme }) {
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>About</h3>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                     <p style={{ marginBottom: '0.5rem' }}><strong>DATASHEET App</strong> v1.0.3</p>
-                    <p>© 2024 LIC Authorization. All rights reserved.</p>
+                    <p>Designed with Love by VIDEC for the Agents</p>
                 </div>
             </div>
         </div>

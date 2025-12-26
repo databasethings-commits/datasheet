@@ -7,18 +7,20 @@ export const getPolicies = async (type = 'SUBMITTED') => {
     try {
         const { data, error } = await supabase
             .from('policies')
-            .select('*')
+            .select('*, policy_shares(count)')
             .eq('status', type)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // Map back to our app structure (unwrapping formData)
+        // Map back to our app structure
         return data.map(row => ({
             ...row.form_data, // Spread the JSON form data
             id: row.id,       // Use UUID from DB
             lastModified: row.updated_at,
-            status: row.status
+            status: row.status,
+            ownerId: row.user_id,
+            sharedCount: row.policy_shares && row.policy_shares[0] ? row.policy_shares[0].count : 0
         }));
     } catch (err) {
         console.error('Error fetching policies:', err);
@@ -26,47 +28,63 @@ export const getPolicies = async (type = 'SUBMITTED') => {
     }
 };
 
+export const getPolicyById = async (policyId) => {
+    try {
+        const { data, error } = await supabase
+            .from('policies')
+            .select('*')
+            .eq('id', policyId)
+            .single();
+
+        if (error) throw error;
+        return {
+            ...data.form_data,
+            id: data.id,
+            lastModified: data.updated_at,
+            status: data.status,
+            ownerId: data.user_id
+        };
+    } catch (err) {
+        console.error('Error fetching policy:', err);
+        return null;
+    }
+};
+
 // Save a policy (Insert or Update)
 export const savePolicy = async (policyData, isDraft = false) => {
     try {
         const status = isDraft ? 'DRAFT' : 'SUBMITTED';
-        const { id, ...formData } = policyData;
+        // Cleanup: Remove ID and ownerId from the JSON blob we are about to save
+        // ownerId is a helper property we added during fetch, don't save it back to JSON
+        const { id, ownerId, ...formData } = policyData;
 
+        // Prepare payload
         const payload = {
             status,
             form_data: formData,
             updated_at: new Date().toISOString()
         };
 
-        let result;
-
-        // If it looks like a UUID (we got it from DB), update it. 
-        // Note: New offline drafts might assume numeric ID, but with DB we rely on its UUIDs.
-        // For new items, we insert.
-        if (id && id.length > 20) { // Simple check for UUID vs timestamp ID
-            const { data, error } = await supabase
-                .from('policies')
-                .update(payload)
-                .eq('id', id)
-                .select()
-                .single();
-            if (error) throw error;
-            result = data;
-        } else {
-            // New entry
-            const { data, error } = await supabase
-                .from('policies')
-                .insert([payload])
-                .select()
-                .single();
-            if (error) throw error;
-            result = data;
+        // If it's a valid UUID, include it to Upsert (Update or Insert if missing)
+        // This ensures if a record was accidentally deleted but the user still has it open, 
+        // it gets re-created and assigned to them (via default user_id).
+        if (id && id.length > 20) {
+            payload.id = id;
         }
 
+        const { data, error } = await supabase
+            .from('policies')
+            .upsert([payload])
+            .select()
+            .single();
+
+        if (error) throw error;
+
         return {
-            ...result.form_data,
-            id: result.id,
-            status: result.status
+            ...data.form_data,
+            id: data.id,
+            status: data.status,
+            ownerId: data.user_id
         };
     } catch (err) {
         console.error('Error saving policy:', err);
@@ -83,6 +101,85 @@ export const deletePolicy = async (id, isDraft = false) => {
         if (error) throw error;
     } catch (err) {
         console.error('Error deleting policy:', err);
+    }
+};
+
+export const getNotifications = async () => {
+    try {
+        // Since we filter by email in RLS, this returns only user's notifications
+        const { data, error } = await supabase
+            .from('notifications')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    } catch (err) {
+        console.error("Fetch notifications error:", err);
+        return [];
+    }
+};
+
+export const markNotificationRead = async (id) => {
+    try {
+        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    } catch (err) { console.error(err); }
+};
+
+export const sharePolicy = async (policyId, emailInput) => {
+    const email = emailInput.toLowerCase().trim();
+    try {
+        const { error } = await supabase
+            .from('policy_shares')
+            .insert([{ policy_id: policyId, shared_with_email: email }]);
+
+        if (error) {
+            if (error.code === '23505') throw new Error('Already shared with this user');
+            throw error;
+        }
+
+        // Send Notification
+        const { data: { user } } = await supabase.auth.getUser();
+        const sender = user.email;
+
+        await supabase.from('notifications').insert([{
+            recipient_email: email,
+            message: `New: ${sender} shared a policy with you.`,
+            policy_id: policyId
+        }]);
+
+        return true;
+    } catch (err) {
+        console.error('Error sharing policy:', err);
+        throw err;
+    }
+};
+
+export const getPolicyShares = async (policyId) => {
+    try {
+        const { data, error } = await supabase
+            .from('policy_shares')
+            .select('shared_with_email')
+            .eq('policy_id', policyId);
+        if (error) throw error;
+        return data.map(r => r.shared_with_email);
+    } catch (err) {
+        console.error('Error fetching shares:', err);
+        return [];
+    }
+};
+
+export const removePolicyShare = async (policyId, email) => {
+    try {
+        const { error } = await supabase
+            .from('policy_shares')
+            .delete()
+            .eq('policy_id', policyId)
+            .eq('shared_with_email', email);
+
+        if (error) throw error;
+    } catch (err) {
+        console.error('Error removing share:', err);
+        throw err;
     }
 };
 

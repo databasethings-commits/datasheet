@@ -6,7 +6,7 @@ import Sidebar from './Sidebar';
 import Profile from './Profile';
 import Settings from './Settings';
 import AdminPanel from './AdminPanel'; // Import AdminPanel
-import { getPolicies, getCounts, deletePolicy } from '../utils/storage';
+import { getPolicies, getCounts, deletePolicy, getPolicyById } from '../utils/storage';
 
 export default function Dashboard({ view, setView, theme, toggleTheme, isCollapsed }) {
     const [stats, setStats] = useState({ submitted: 0, drafts: 0 });
@@ -14,6 +14,8 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
     const [draftPolicies, setDraftPolicies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState(null); // 'admin' or 'agent'
+    const [userId, setUserId] = useState(null);
+    const [dataFilter, setDataFilter] = useState('all'); // 'all', 'owned', 'shared'
 
     const [editingPolicy, setEditingPolicy] = useState(null);
     const [startStep, setStartStep] = useState(1);
@@ -24,9 +26,43 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
         fetchUserRole();
     }, [view]);
 
+    // Handle deep linking/notification opening
+    useEffect(() => {
+        const handleOpenPolicy = async (event) => {
+            const { policyId } = event.detail;
+            if (!policyId) return;
+
+            setLoading(true);
+            try {
+                // We need to fetch this specific policy because it might not be in the current list
+                // (e.g. if we are on 'home' or 'drafts' view)
+                // Actually safer to fetch fresh to ensure we have permissions
+                const policy = await getPolicyById(policyId);
+
+                if (policy) {
+                    setEditingPolicy(policy);
+                    setStartStep(10); // Review step
+                    setIsReadOnly(policy.ownerId !== userId); // Read only if shared
+                    setView('form');
+                } else {
+                    alert("Content not found or access denied.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load policy.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        window.addEventListener('openPolicyFromNotification', handleOpenPolicy);
+        return () => window.removeEventListener('openPolicyFromNotification', handleOpenPolicy);
+    }, [userId]); // Depend on userId to set IsReadOnly correctly
+
     const fetchUserRole = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+            setUserId(user.id);
             const { data } = await supabase
                 .from('profiles')
                 .select('role')
@@ -55,6 +91,20 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
             setLoading(false);
         }
     };
+
+    // Realtime Data Sync
+    useEffect(() => {
+        if (!userId) return;
+
+        const channel = supabase.channel(`dashboard_sync_${userId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'policy_shares' }, () => fetchData())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, view]);
 
     const handleStartNew = () => {
         setEditingPolicy(null);
@@ -93,9 +143,16 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
             readOnly={isReadOnly}
             onCancel={handleFormClose}
             onSuccess={handleFormClose}
-            onEdit={() => setIsReadOnly(false)}
+            onEdit={editingPolicy?.ownerId === userId ? () => setIsReadOnly(false) : null}
         />;
     }
+
+    // Filter policies based on selection
+    const filteredPolicies = submittedPolicies.filter(p => {
+        if (dataFilter === 'owned') return p.ownerId === userId;
+        if (dataFilter === 'shared') return p.ownerId !== userId;
+        return true;
+    });
 
     return (
         <div className="container" style={{ display: 'flex', gap: '2rem', padding: '0' }}>
@@ -132,18 +189,68 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
 
                 {view === 'data' && (
                     <div>
-                        <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Submitted Applications</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 style={{ color: 'var(--primary)', margin: 0 }}>Submitted Applications</h2>
+                            <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                <button
+                                    onClick={() => setDataFilter('all')}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        border: 'none',
+                                        background: dataFilter === 'all' ? 'var(--primary)' : 'transparent',
+                                        color: dataFilter === 'all' ? 'white' : 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    All
+                                </button>
+                                <button
+                                    onClick={() => setDataFilter('owned')}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        border: 'none',
+                                        background: dataFilter === 'owned' ? 'var(--primary)' : 'transparent',
+                                        color: dataFilter === 'owned' ? 'white' : 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    My Data
+                                </button>
+                                <button
+                                    onClick={() => setDataFilter('shared')}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        border: 'none',
+                                        background: dataFilter === 'shared' ? 'var(--primary)' : 'transparent',
+                                        color: dataFilter === 'shared' ? 'white' : 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    Shared With Me
+                                </button>
+                            </div>
+                        </div>
+
                         {loading ? <p>Loading...</p> : (
                             <PolicyList
-                                policies={submittedPolicies}
+                                policies={filteredPolicies}
                                 isDraft={false}
                                 onAction={(p) => {
                                     setEditingPolicy(p);
                                     setStartStep(10);
+                                    // Read only if forced (view mode) or if I am not the owner
                                     setIsReadOnly(true);
                                     setView('form');
                                 }}
                                 onDelete={handleDelete}
+                                currentUserId={userId}
+                                refreshData={fetchData}
                             />
                         )}
                     </div>
@@ -156,8 +263,21 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
                             <PolicyList
                                 policies={draftPolicies}
                                 isDraft={true}
-                                onAction={handleResumeDraft}
+                                onAction={(p) => {
+                                    // If I am not the owner, force read only even for drafts (though likely rare)
+                                    const isOwner = p.ownerId === userId;
+                                    if (isOwner) {
+                                        handleResumeDraft(p);
+                                    } else {
+                                        setEditingPolicy(p);
+                                        setStartStep(10);
+                                        setIsReadOnly(true);
+                                        setView('form');
+                                    }
+                                }}
                                 onDelete={handleDelete}
+                                currentUserId={userId}
+                                refreshData={fetchData}
                             />
                         )}
                     </div>

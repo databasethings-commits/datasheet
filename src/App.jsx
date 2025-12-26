@@ -11,6 +11,32 @@ function App() {
   const [theme, setTheme] = useState(localStorage.getItem('app_theme') || 'dark');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Handle navigation with browser history
+  const navigateTo = (newView) => {
+    if (newView === view) return;
+    window.history.pushState({ view: newView }, '', '');
+    setView(newView);
+  };
+
+  useEffect(() => {
+    // Initial history state
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'home' }, '', '');
+    }
+
+    const handlePopState = (event) => {
+      if (event.state && event.state.view) {
+        setView(event.state.view);
+      } else {
+        // If checking back to start, default to home
+        setView('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -61,17 +87,25 @@ function App() {
     return <Login />;
   }
 
+  const handleNotificationNavigation = (policyId) => {
+    // Dispatch a custom event for Dashboard to listen to
+    // This decouples App from knowing specific Dashboard internal logic
+    const event = new CustomEvent('openPolicyFromNotification', { detail: { policyId } });
+    window.dispatchEvent(event);
+  };
+
   return (
     <div className="full-height" style={{ flexDirection: 'row', overflow: 'hidden' }}>
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'visible' }}>
         <Header
-          onProfileClick={() => setView('profile')}
+          onProfileClick={() => navigateTo('profile')}
           toggleSidebar={toggleSidebar}
+          onNotificationClick={handleNotificationNavigation}
         />
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '2rem' }}>
           <Dashboard
             view={view}
-            setView={setView}
+            setView={navigateTo}
             theme={theme}
             toggleTheme={toggleTheme}
             isCollapsed={isSidebarCollapsed}
