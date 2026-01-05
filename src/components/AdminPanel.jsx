@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { UserPlus, Trash2, Shield, User, Loader, Save } from 'lucide-react';
+import { UserPlus, Trash2, Shield, User, Loader, Save, Pause, Play } from 'lucide-react';
 
 export default function AdminPanel() {
     const [users, setUsers] = useState([]);
@@ -90,6 +90,22 @@ export default function AdminPanel() {
             setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
         } catch (err) {
             setError('Failed to update role: ' + err.message);
+        }
+    };
+
+    const handleTogglePause = async (userId, currentPauseStatus) => {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ is_paused: !currentPauseStatus })
+                .eq('id', userId);
+
+            if (error) throw error;
+
+            // Optimistic update
+            setUsers(users.map(u => u.id === userId ? { ...u, is_paused: !currentPauseStatus } : u));
+        } catch (err) {
+            setError('Failed to update access: ' + err.message);
         }
     };
 
@@ -195,6 +211,7 @@ export default function AdminPanel() {
                                 <th style={{ padding: '1rem' }}>Name</th>
                                 <th style={{ padding: '1rem' }}>Email</th>
                                 <th style={{ padding: '1rem' }}>Role</th>
+                                <th style={{ padding: '1rem' }}>Status</th>
                                 <th style={{ padding: '1rem' }}>Joined</th>
                                 <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
                             </tr>
@@ -224,26 +241,54 @@ export default function AdminPanel() {
                                             <option value="admin">SUPER ADMIN</option>
                                         </select>
                                     </td>
+                                    <td style={{ padding: '1rem' }}>
+                                        <span style={{
+                                            padding: '2px 8px',
+                                            borderRadius: '12px',
+                                            background: user.is_paused ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                                            color: user.is_paused ? '#ef4444' : '#22c55e',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 600
+                                        }}>
+                                            {user.is_paused ? 'PAUSED' : 'ACTIVE'}
+                                        </span>
+                                    </td>
                                     <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <button
-                                            onClick={() => handleDeleteUser(user)}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                color: '#ef4444',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                padding: '5px',
-                                                borderRadius: '4px'
-                                            }}
-                                            title="Delete User"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                            <button
+                                                onClick={() => handleTogglePause(user.id, user.is_paused)}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: user.is_paused ? '#22c55e' : 'var(--text-muted)',
+                                                    cursor: 'pointer',
+                                                    padding: '5px',
+                                                    borderRadius: '4px'
+                                                }}
+                                                title={user.is_paused ? "Resume Access" : "Pause Access"}
+                                            >
+                                                {user.is_paused ? <Play size={18} /> : <Pause size={18} />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user)}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: '#ef4444',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    padding: '5px',
+                                                    borderRadius: '4px'
+                                                }}
+                                                title="Delete User"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

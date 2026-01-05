@@ -10,6 +10,7 @@ function App() {
   const [view, setView] = useState('home');
   const [theme, setTheme] = useState(localStorage.getItem('app_theme') || 'dark');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Handle navigation with browser history
   const navigateTo = (newView) => {
@@ -38,9 +39,25 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const checkUserStatus = async (user) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_paused')
+        .eq('id', user.id)
+        .single();
+
+      if (data?.is_paused) {
+        setIsPaused(true);
+      } else {
+        setIsPaused(false);
+      }
+    };
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) checkUserStatus(session.user);
       setLoading(false);
     });
 
@@ -49,6 +66,7 @@ function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) checkUserStatus(session.user);
       setLoading(false);
     });
 
@@ -85,6 +103,43 @@ function App() {
 
   if (!session) {
     return <Login />;
+  }
+
+  if (isPaused) {
+    return (
+      <div style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-space)',
+        color: 'var(--text-main)',
+        padding: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          padding: '3rem',
+          background: 'var(--bg-panel)',
+          borderRadius: '24px',
+          border: '1px solid var(--border)',
+          maxWidth: '500px'
+        }}>
+          <h2 style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '2rem' }}>Access Paused</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.1rem' }}>
+            Your account access has been temporarily suspended by the administrator.
+            Please contact your Super Admin for reactivation.
+          </p>
+          <button
+            className="btn btn-primary"
+            style={{ padding: '0.8rem 2rem', background: '#334155' }}
+            onClick={() => supabase.auth.signOut()}
+          >
+            Switch Account
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const handleNotificationNavigation = (policyId) => {
