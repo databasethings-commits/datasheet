@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { savePolicy, deletePolicy, uploadFile } from '../utils/storage';
-import { Plus, Trash, Check, Upload, Camera, FileText, X, Eye, Edit2 } from 'lucide-react';
+import { Plus, Trash, Check, Upload, Camera, FileText, X, Eye, Edit2, RefreshCw } from 'lucide-react';
 
 const STEPS = [
     { id: 1, title: 'Personal' },
@@ -45,6 +45,7 @@ export default function CustomerForm({ onCancel, onSuccess, initialData, initial
     const [previewDoc, setPreviewDoc] = useState(null);
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const [facingMode, setFacingMode] = useState('user'); // 'user' for front, 'environment' for rear
 
     // Helpers
     const getAge = (dobString) => {
@@ -92,18 +93,36 @@ export default function CustomerForm({ onCancel, onSuccess, initialData, initial
     };
 
     // --- Camera Logic ---
-    const startCamera = async () => {
+    const startCamera = async (mode = facingMode) => {
         if (readOnly) return;
         setIsScanning(true);
+
+        // Stop current stream if any
+        if (videoRef.current && videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        }
+
         setTimeout(async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const constraints = {
+                    video: { facingMode: mode }
+                };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 if (videoRef.current) videoRef.current.srcObject = stream;
             } catch (err) {
-                alert("Could not access camera.");
+                console.error("Camera Error:", err);
+                alert("Could not access camera. Please check permissions.");
                 setIsScanning(false);
             }
         }, 100);
+    };
+
+    const toggleCamera = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const nextMode = facingMode === 'user' ? 'environment' : 'user';
+        setFacingMode(nextMode);
+        startCamera(nextMode);
     };
 
     const stopCamera = () => {
@@ -329,9 +348,10 @@ export default function CustomerForm({ onCancel, onSuccess, initialData, initial
                     <div style={{ position: 'relative', width: '100%', maxWidth: '640px', background: 'black', borderRadius: '12px', overflow: 'hidden' }}>
                         <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }}></video>
                         <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-                        <div style={{ position: 'absolute', bottom: '20px', width: '100%', display: 'flex', justifyContent: 'center', gap: '2rem' }}>
+                        <div style={{ position: 'absolute', bottom: '20px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
                             <button onClick={stopCamera} className="btn" style={{ background: '#ef4444', color: 'white' }}>Cancel</button>
                             <button onClick={captureImage} className="btn" style={{ background: 'white', borderRadius: '50%', width: '60px', height: '60px', padding: 0 }}><div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '4px solid black', margin: 'auto' }}></div></button>
+                            <button onClick={toggleCamera} className="btn" style={{ background: 'rgba(255,255,255,0.2)', color: 'white', borderRadius: '50%', width: '48px', height: '48px', padding: 0 }} title="Switch Camera"><RefreshCw size={24} /></button>
                         </div>
                     </div>
                 </div>
