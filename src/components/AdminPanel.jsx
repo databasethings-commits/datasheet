@@ -106,7 +106,7 @@ export default function AdminPanel() {
             <div className="card" style={{ marginBottom: '2rem' }}>
                 <h3 style={{ marginBottom: '1.5rem' }}>Create New User</h3>
 
-                <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <form onSubmit={handleCreateUser} className="admin-form">
                     <div className="form-group">
                         <label>First Name</label>
                         <input

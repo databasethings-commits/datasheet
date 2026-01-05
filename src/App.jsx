@@ -95,7 +95,7 @@ function App() {
   };
 
   return (
-    <div className="full-height" style={{ flexDirection: 'row', overflow: 'hidden' }}>
+    <div className="full-height">
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'visible' }}>
         <Header
           onProfileClick={() => navigateTo('profile')}

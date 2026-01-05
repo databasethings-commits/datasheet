@@ -155,7 +155,7 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
     });
 
     return (
-        <div className="container" style={{ display: 'flex', gap: '2rem', padding: '0' }}>
+        <div className="dashboard-layout">
             <Sidebar
                 view={view}
                 onChangeView={setView}
@@ -166,7 +166,7 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
 
             <div style={{ flex: 1, padding: '1rem 0' }}>
                 {view === 'home' && (
-                    <div className="card" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div className="card welcome-card" style={{ textAlign: 'center' }}>
                         <h2 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>Welcome</h2>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
                             Start a new customer data collection session for life insurance policies.
@@ -174,7 +174,7 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
                         <button className="btn btn-primary" onClick={handleStartNew} style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}>
                             + New Policy Application
                         </button>
-                        <div style={{ marginTop: '3rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <div className="stats-container">
                             <div style={{ border: '1px solid var(--border)', padding: '1rem', borderRadius: '8px', minWidth: '150px' }}>
                                 <h3 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{stats.submitted}</h3>
                                 <span style={{ color: 'var(--text-muted)' }}>Submitted</span>
@@ -189,9 +189,9 @@ export default function Dashboard({ view, setView, theme, toggleTheme, isCollaps
 
                 {view === 'data' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <div className="view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h2 style={{ color: 'var(--primary)', margin: 0 }}>Submitted Applications</h2>
-                            <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <div className="filter-container">
                                 <button
                                     onClick={() => setDataFilter('all')}
                                     style={{

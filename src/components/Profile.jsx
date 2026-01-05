@@ -95,7 +95,7 @@ export default function Profile() {
 
     return (
         <div className="container" style={{ maxWidth: '900px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="profile-header">
                 <h2 style={{ color: 'var(--primary)', margin: 0 }}>Agent Profile</h2>
                 <button onClick={handleLogout} className="btn btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}>
                     <LogOut size={18} style={{ marginRight: '8px' }} /> Sign Out
